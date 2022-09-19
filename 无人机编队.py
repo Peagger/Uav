@@ -107,15 +107,16 @@ class Formation():
                 target=node
         return target
     
-    def reachBorder(self,uav:Uav,list=[]):
+    def reachBorder(self,uav:Uav,list):
         '''无人机到边界'''
-        if list==[]:list=self.node_list
+
         id=self.uav_list.index(uav)
         target_node=self.getTarget(uav,self.node_list)
         if(self.Occupy(target_node)==id or self.Occupy(target_node)==None):
             distance=self.calculateDistance([uav.x,uav.y,uav.z],target_node)
             if distance<=uav.speed:
                 uav.x=target_node[0];uav.y=target_node[1];uav.z=target_node[2]
+                uav.in_place=True
             else:
                 angel=self.calculateAngel([uav.x,uav.y,uav.z],target_node)
                 uav.move(angel)
@@ -124,7 +125,17 @@ class Formation():
             list2.remove(target_node)
             return self.reachBorder(uav,list2)
 
- 
+    def stage1(self):
+        flag=True
+        while(flag):
+            for uav in self.uav_list:
+                self.reachBorder(uav,self.node_list)
+            flag=False
+            for uav in self.uav_list:
+                if(uav.in_place==False):
+                    flag=True
+                    break
+
 
 
 
