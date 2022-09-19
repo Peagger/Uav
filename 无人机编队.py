@@ -1,7 +1,8 @@
 
 from dis import dis
 import random
-from turtle import pos
+from re import S
+from turtle import distance, pos
 import numpy as np
 
 
@@ -34,7 +35,7 @@ class Formation():
     '''编队类'''
     def __init__(self) -> None:
         self.number=0           #编队的无人机数量
-        self.uav_list=[]        #无人机对象列表
+        self.uav_list[Uav]=[]        #无人机对象列表
     
     def calculateDistance(self,pos1:list,pos2:list):
         '''计算空间距离'''
@@ -85,7 +86,15 @@ class Formation():
                                   node_list[i][1]*(capacity-j)/capacity+node_list[i+1][1]*(j)/capacity,
                                   node_list[i][2]*(capacity-j)/capacity+node_list[i+1][2]*(j)/capacity])
         return node_list
-        
+    
+    def isOccupy(self,node:list):
+        '''判断是否占领,True则位置已经被占领'''
+        for uav in self.uav_list:
+            distance=self.calculateDistance([uav.x,uav.y,uav.z],[node[0],node[1],node[2]])
+            if (distance<2*uav.r):return True
+        return False
+    
+    
     def showUav(self):
         '''显示编队信息'''
         print('共{}架无人机'.format(self.number))
