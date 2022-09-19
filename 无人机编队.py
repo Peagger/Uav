@@ -1,8 +1,6 @@
 
-from dis import dis
+import copy
 import random
-from re import S
-from turtle import distance, pos
 import numpy as np
 
 
@@ -14,7 +12,7 @@ class Uav():
         self.y=y
         self.z=z            #位置信息
         self.speed=5        #无人机速度
-        self.in_place=False
+        self.in_place=False #完成阶段性任务
         self.r=0.5     #无人机半径
     
     def move(self,dir):
@@ -35,7 +33,8 @@ class Formation():
     '''编队类'''
     def __init__(self) -> None:
         self.number=0           #编队的无人机数量
-        self.uav_list[Uav]=[]        #无人机对象列表
+        self.uav_list=[]        #无人机对象列表
+        self.node_list=[]
     
     def calculateDistance(self,pos1:list,pos2:list):
         '''计算空间距离'''
@@ -85,16 +84,51 @@ class Formation():
                 node_list.append([node_list[i][0]*(capacity-j)/capacity+node_list[i+1][0]*(j)/capacity,
                                   node_list[i][1]*(capacity-j)/capacity+node_list[i+1][1]*(j)/capacity,
                                   node_list[i][2]*(capacity-j)/capacity+node_list[i+1][2]*(j)/capacity])
+        self.node_list=node_list
         return node_list
     
-    def isOccupy(self,node:list):
+    def Occupy(self,node:list):
         '''判断是否占领,True则位置已经被占领'''
         for uav in self.uav_list:
             distance=self.calculateDistance([uav.x,uav.y,uav.z],[node[0],node[1],node[2]])
-            if (distance<2*uav.r):return True
-        return False
+            if (distance<2*uav.r):
+                id=self.uav_list.index(uav)
+                return id
+        return None
     
+    def getTarget(self,uav:Uav,list):
+        '''获得无人机目标'''
+        target=list[0]
+        init_distance=self.calculateDistance([uav.x,uav.y,uav.z],target)
+        for node in list:
+            d=self.calculateDistance([uav.x,uav.y,uav.z],node)
+            if d<init_distance:
+                init_distance=d
+                target=node
+        return target
     
+    def reachBorder(self,uav:Uav,list=[]):
+        '''无人机到边界'''
+        if list==[]:list=self.node_list
+        id=self.uav_list.index(uav)
+        target_node=self.getTarget(uav,self.node_list)
+        if(self.Occupy(target_node)==id or self.Occupy(target_node)==None):
+            distance=self.calculateDistance([uav.x,uav.y,uav.z],target_node)
+            if distance<=uav.speed:
+                uav.x=target_node[0];uav.y=target_node[1];uav.z=target_node[2]
+            else:
+                angel=self.calculateAngel([uav.x,uav.y,uav.z],target_node)
+                uav.move(angel)
+        else:
+            list2=copy.deepcopy(list)
+            list2.remove(target_node)
+            return self.reachBorder(uav,list2)
+
+ 
+
+
+
+
     def showUav(self):
         '''显示编队信息'''
         print('共{}架无人机'.format(self.number))
