@@ -6,3 +6,10 @@ while('小猪'not in 双黄列表):
     玩家名称=input()
     双黄列表.append(玩家名称)
 print(玩家名称+'聪明逼')
+
+
+class Vertix():
+    def __init__(self) -> None:
+        self.occupy=None
+        self.posision=[]
+        
