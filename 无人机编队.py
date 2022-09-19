@@ -12,7 +12,7 @@ class Uav():
         self.x=x
         self.y=y
         self.z=z            #位置信息
-        self.speed=2        #无人机速度
+        self.speed=5        #无人机速度
         self.in_place=False #完成阶段性任务
         self.r=0.01     #无人机半径
     
@@ -67,16 +67,16 @@ class Formation():
         self.number+=1
         return True
 
-    def autoRandomAdd(self,n,x1=0,x2=100,y1=0,y2=100,z1=0,z2=100):
+    def autoRandomAdd(self,n,x1=0,x2=300,y1=0,y2=300,z1=0,z2=1000):
         '''随机生成编队'''
         while(self.number<n):
             x,y,z=random.randint(x1,x2),random.randint(y1,y2),random.randint(z1,z2)
             self.addUav(Uav(x,y,z))
         self.number=n
     
-    def createTargetNode(self,center:list=[50,50,50],n=4,r=60):
+    def createTargetNode(self,center:list=[150,150,400],n=40,r=60):
         '''根据中心点位置生成目标位置'''
-        capacity= self.number/n if self.number/n%1==0 else int(self.number/n)+1
+        capacity= int(self.number/n) if self.number/n%1==0 else int(self.number/n)+1
         node_list=[[center[0]+r*np.cos(i*2*np.pi/n),
                     center[1]+r*np.sin(i*2*np.pi/n),
                     center[2]]for i in range(n)]
@@ -157,7 +157,7 @@ class Formation():
 
 if __name__=='__main__':
     f=Formation()
-    f.autoRandomAdd(60)
+    f.autoRandomAdd(30)
     f.stage1()
     fig = plt.figure()
     ax = plt.axes(projection='3d')
@@ -165,7 +165,7 @@ if __name__=='__main__':
     ax.set_xlabel('X')
     ax.set_ylim(0, 300)
     ax.set_ylabel('Y')
-    ax.set_zlim(0, 400)
+    ax.set_zlim(0, 1000)
     ax.set_zlabel('Z')
     x,y,z=[],[],[]
     for i in range(len(f.uav_list)):
@@ -189,6 +189,6 @@ if __name__=='__main__':
         sc.set_3d_properties(sz, zdir='z')
         return sc
 
-    ani=animation.FuncAnimation(fig, update, frames=f.stage1, interval=50)
+    ani=animation.FuncAnimation(fig, update, frames=f.stage1, interval=100)
     plt.show()
-    f.showUav()
+    #f.showUav()
