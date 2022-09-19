@@ -72,6 +72,20 @@ class Formation():
             x,y,z=random.randint(x1,x2),random.randint(y1,y2),random.randint(z1,z2)
             self.addUav(Uav(x,y,z))
     
+    def createTargetNode(self,center:list=[50,50,50],n=4,r=50):
+        '''根据中心点位置生成目标位置'''
+        capacity=self.number
+        node_list=[[center[0]+r*np.cos(i*2*np.pi/n),
+                    center[1]+r*np.sin(i*2*np.pi/n),
+                    center[2]]for i in range(n)]
+        node_list.append(node_list[0])
+        for i in range(n):
+            for j in range(capacity):
+                node_list.append([node_list[i][0]*(capacity-j)/capacity+node_list[i+1][0]*(j)/capacity,
+                                  node_list[i][1]*(capacity-j)/capacity+node_list[i+1][1]*(j)/capacity,
+                                  node_list[i][2]*(capacity-j)/capacity+node_list[i+1][2]*(j)/capacity])
+        return node_list
+        
     def showUav(self):
         '''显示编队信息'''
         print('共{}架无人机'.format(self.number))
@@ -84,5 +98,5 @@ if __name__=='__main__':
     f=Formation()
     # f.autoRandomAdd(10)
     # f.showUav()
-    res=f.calculateAngel([0,0,0],[3,4,0])
-    print(res)
+    f.number=0
+    f.createTargetNode()
