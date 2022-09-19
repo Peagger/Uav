@@ -2,6 +2,7 @@
 import copy
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 
@@ -11,9 +12,9 @@ class Uav():
         self.x=x
         self.y=y
         self.z=z            #位置信息
-        self.speed=5        #无人机速度
+        self.speed=2        #无人机速度
         self.in_place=False #完成阶段性任务
-        self.r=0.5     #无人机半径
+        self.r=0.01     #无人机半径
     
     def move(self,dir):
         '''向给定方向向量移动无人机'''
@@ -24,9 +25,9 @@ class Uav():
     
     def printPos(self):
         '''报告自身位置'''
-        print('x坐标:{:3}'.format(self.x),end=',')
-        print('y坐标:{:3}'.format(self.y),end=',')
-        print('z坐标:{:3}'.format(self.z),end='\n')
+        print('x坐标:{:<6.2f}'.format(float(self.x)),end=',')
+        print('y坐标:{:<6.2f}'.format(float(self.y)),end=',')
+        print('z坐标:{:<6.2f}'.format(float(self.z)),end='\n')
 
 
 class Formation():
@@ -71,16 +72,17 @@ class Formation():
         while(self.number<n):
             x,y,z=random.randint(x1,x2),random.randint(y1,y2),random.randint(z1,z2)
             self.addUav(Uav(x,y,z))
+        self.number=n
     
-    def createTargetNode(self,center:list=[50,50,50],n=4,r=50):
+    def createTargetNode(self,center:list=[50,50,50],n=4,r=60):
         '''根据中心点位置生成目标位置'''
-        capacity=self.number
+        capacity= self.number/n if self.number/n%1==0 else int(self.number/n)+1
         node_list=[[center[0]+r*np.cos(i*2*np.pi/n),
                     center[1]+r*np.sin(i*2*np.pi/n),
                     center[2]]for i in range(n)]
         node_list.append(node_list[0])
         for i in range(n):
-            for j in range(capacity):
+            for j in range(1,capacity):
                 node_list.append([node_list[i][0]*(capacity-j)/capacity+node_list[i+1][0]*(j)/capacity,
                                   node_list[i][1]*(capacity-j)/capacity+node_list[i+1][1]*(j)/capacity,
                                   node_list[i][2]*(capacity-j)/capacity+node_list[i+1][2]*(j)/capacity])
@@ -111,7 +113,7 @@ class Formation():
         '''无人机到边界'''
 
         id=self.uav_list.index(uav)
-        target_node=self.getTarget(uav,self.node_list)
+        target_node=self.getTarget(uav,list)
         if(self.Occupy(target_node)==id or self.Occupy(target_node)==None):
             distance=self.calculateDistance([uav.x,uav.y,uav.z],target_node)
             if distance<=uav.speed:
@@ -128,13 +130,18 @@ class Formation():
     def stage1(self):
         flag=True
         while(flag):
+            self.createTargetNode()
             for uav in self.uav_list:
                 self.reachBorder(uav,self.node_list)
+            #self.showUav()
             flag=False
+
             for uav in self.uav_list:
                 if(uav.in_place==False):
                     flag=True
                     break
+            yield self.uav_list
+
 
 
 
@@ -150,7 +157,38 @@ class Formation():
 
 if __name__=='__main__':
     f=Formation()
-    # f.autoRandomAdd(10)
-    # f.showUav()
-    f.number=0
-    f.createTargetNode()
+    f.autoRandomAdd(60)
+    f.stage1()
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.set_xlim(0, 300)
+    ax.set_xlabel('X')
+    ax.set_ylim(0, 300)
+    ax.set_ylabel('Y')
+    ax.set_zlim(0, 400)
+    ax.set_zlabel('Z')
+    x,y,z=[],[],[]
+    for i in range(len(f.uav_list)):
+        x.append(f.uav_list[i].x)
+        y.append(f.uav_list[i].y)
+        z.append(f.uav_list[i].z)
+    pxs=np.array(x)
+    pys=np.array(y)
+    pzs=np.array(z)
+    sc=ax.scatter3D(pxs, pys, pzs, color='r', alpha=0.7)
+    from matplotlib import animation
+    
+    def update(list):
+        positionlist=[]
+        sz=[]
+        for i in range(len(list)):
+            positionlist.append([list[i].x,list[i].y,list[i].z])
+            sz.append(list[i].z)
+        li = np.array(positionlist)
+        sc.set_offsets(li[:,:-1])
+        sc.set_3d_properties(sz, zdir='z')
+        return sc
+
+    ani=animation.FuncAnimation(fig, update, frames=f.stage1, interval=50)
+    plt.show()
+    f.showUav()
