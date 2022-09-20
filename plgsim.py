@@ -52,7 +52,7 @@ ax.set_ylabel('Y')
 ax.set_zlim(0, 400)
 ax.set_zlabel('Z')
 sc = ax.scatter3D(pxs, pys, pzs, color='r', alpha=0.7)
-ax.plot(verxs, verys, verzs, color='black', linestyle=':')
+ax.plot(verxs, verys, verzs, color='black', linestyle=':')#多边形边框
 
 """均匀化时,链表化节点参数"""
 d = 2 * r * np.sin(np.pi / m)
@@ -349,7 +349,7 @@ def gen():
     global PointAddIndexSorted
     global Point_addIndex
     global Vertexs_Tooth_Chain
-    state_flag = 1
+    state_flag = 0
     Point_List2 = []  # 用于比较
     init_flag = 0
 
@@ -411,7 +411,7 @@ def judge(arg_list):
     d = len(Vertexs_Tooth_Chain) / n
     for each in arg_list:
         if abs(each - d) > d/10:
-            print(abs(each - d))
+            #print(abs(each - d))#最大链表数差距和平均的差距
             return False
     return True
 
