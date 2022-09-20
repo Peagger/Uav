@@ -36,6 +36,7 @@ class Formation():
         self.number=0           #编队的无人机数量
         self.uav_list=[]        #无人机对象列表
         self.node_list=[]
+        self.center=[150,150,400]
     
     def calculateDistance(self,pos1:list,pos2:list):
         '''计算空间距离'''
@@ -74,8 +75,9 @@ class Formation():
             self.addUav(Uav(x,y,z))
         self.number=n
     
-    def createTargetNode(self,center:list=[150,150,400],n=40,r=60):
+    def createTargetNode(self,center:list=[],n=40,r=60):
         '''根据中心点位置生成目标位置'''
+        if(center==[]):center=self.center
         capacity= int(self.number/n) if self.number/n%1==0 else int(self.number/n)+1
         node_list=[[center[0]+r*np.cos(i*2*np.pi/n),
                     center[1]+r*np.sin(i*2*np.pi/n),
@@ -130,7 +132,7 @@ class Formation():
     def stage1(self):
         flag=True
         while(flag):
-            self.createTargetNode()
+            self.createTargetNode(center=self.center)
             for uav in self.uav_list:
                 self.reachBorder(uav,self.node_list)
             #self.showUav()
@@ -140,7 +142,14 @@ class Formation():
                 if(uav.in_place==False):
                     flag=True
                     break
+            self.moveCenter([0.2,0.2,0.1])#移动速度
             yield self.uav_list
+    
+    def moveCenter(self,s):
+        self.center[0]+=s[0]
+        self.center[1]+=s[1]
+        self.center[2]+=s[2]
+
 
 
 
@@ -157,7 +166,7 @@ class Formation():
 
 if __name__=='__main__':
     f=Formation()
-    f.autoRandomAdd(30)
+    f.autoRandomAdd(40)
     f.stage1()
     fig = plt.figure()
     ax = plt.axes(projection='3d')
