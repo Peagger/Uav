@@ -36,6 +36,7 @@ class Formation():
         self.number=0           #编队的无人机数量
         self.uav_list=[]        #无人机对象列表
         self.node_list=[]
+        self.directed=True      #定向移动是否完成
     
     def calculateDistance(self,pos1:list,pos2:list):
         '''计算空间距离'''
@@ -72,7 +73,15 @@ class Formation():
         while(self.number<n):
             x,y,z=random.randint(x1,x2),random.randint(y1,y2),random.randint(z1,z2)
             self.addUav(Uav(x,y,z))
-        self.number=n
+        
+    def orderedAdd(self,n,*uavlist):
+        i=0
+        while(self.number<n):
+            x=uavlist[0]
+            y=(uavlist[3]-uavlist[2])*i/n+uavlist[2]
+            z=uavlist[4]
+            i+=1
+            self.addUav(Uav(x,y,z))
     
     def createTargetNode(self,center:list=[150,150,400],n=40,r=60):
         '''根据中心点位置生成目标位置'''
@@ -140,7 +149,21 @@ class Formation():
                 if(uav.in_place==False):
                     flag=True
                     break
+            return self.uav_list
+            
+    def stage2(self):
+        '''在stage1基础上添加定向移动'''
+        while(self.directed):
+            for uav in self.uav_list:
+                uav.move([1,0,0])
+                if uav.x>=100:
+                    self.directed=False
+                    break
             yield self.uav_list
+        res=self.stage1()
+        yield res
+        
+        
 
 
 
@@ -157,7 +180,8 @@ class Formation():
 
 if __name__=='__main__':
     f=Formation()
-    f.autoRandomAdd(30)
+    # f.autoRandomAdd(30)
+    f.orderedAdd(10,*[0,0,50,250,400,400])
     f.stage1()
     fig = plt.figure()
     ax = plt.axes(projection='3d')
@@ -189,6 +213,6 @@ if __name__=='__main__':
         sc.set_3d_properties(sz, zdir='z')
         return sc
 
-    ani=animation.FuncAnimation(fig, update, frames=f.stage1, interval=100)
+    ani=animation.FuncAnimation(fig, update, frames=f.stage2, interval=100)
     plt.show()
     #f.showUav()
